@@ -1,0 +1,19 @@
+{
+  "name": "qrurl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:init": "wrangler d1 execute qrurl-db --local --file=./schema/schema.sql",
+    "db:init:remote": "wrangler d1 execute qrurl-db --file=./schema/schema.sql"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "wrangler": "^4.32.0"
+  }
+}

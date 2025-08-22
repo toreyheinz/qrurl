@@ -1,0 +1,29 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@vueuse/core": "^13.7.0",
+    "autoprefixer": "^10.4.21",
+    "axios": "^1.11.0",
+    "lucide-vue-next": "^0.541.0",
+    "pinia": "^3.0.3",
+    "postcss": "^8.5.6",
+    "qrcode": "^1.5.4",
+    "qrcode.js": "^0.0.1",
+    "tailwindcss": "^3.4.17",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vite": "^7.1.2"
+  }
+}
