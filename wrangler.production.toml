@@ -1,0 +1,40 @@
+name = "qrurl"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "b253e6fbfd2f7757cadd0386de5bde3f"
+
+# Custom domain
+route = { pattern = "api.qrurl.us/*", custom_domain = true }
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "qrurl-db"
+database_id = "17eb6fdb-19da-4ed7-931c-a4cdef281f8c"
+
+# R2 Storage
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "qrurl-storage"
+
+# KV Namespace for caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "1cacb0f1b44b4324b62c1bc010ff15f5"
+
+# Environment Variables (set in Cloudflare dashboard or via secrets)
+[vars]
+FRONTEND_URL = "https://qrurl.us"
+BACKEND_URL = "https://qrurl.us"
+
+# Production settings
+[env.production]
+name = "qrurl-production"
+
+# Rate limiting
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1"
+simple = { limit = 60, period = 60 }
