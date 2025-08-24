@@ -63,7 +63,10 @@ if [ -z "$JWT_SECRET" ]; then
 fi
 
 # Get email API key
-read -p "Enter EMAIL_API_KEY (Resend/SendGrid): " EMAIL_API_KEY
+read -p "Enter Postmark Server API Token: " EMAIL_API_KEY
+
+# Get email from address
+read -p "Enter FROM email address (e.g., noreply@qrurl.us): " EMAIL_FROM
 
 # Get authorized emails
 read -p "Enter AUTHORIZED_EMAILS (comma-separated): " AUTHORIZED_EMAILS
@@ -72,6 +75,7 @@ echo ""
 echo "Setting production secrets..."
 echo "$JWT_SECRET" | wrangler secret put JWT_SECRET --name qrurl
 echo "$EMAIL_API_KEY" | wrangler secret put EMAIL_API_KEY --name qrurl
+echo "$EMAIL_FROM" | wrangler secret put EMAIL_FROM --name qrurl
 echo "$AUTHORIZED_EMAILS" | wrangler secret put AUTHORIZED_EMAILS --name qrurl
 
 echo ""

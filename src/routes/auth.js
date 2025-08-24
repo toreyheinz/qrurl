@@ -158,35 +158,41 @@ async function logout(request, env) {
 }
 
 async function sendEmail(env, email, magicLink) {
-  // Example with Resend API
-  if (env.EMAIL_API_KEY && env.EMAIL_API_KEY.startsWith('re_')) {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.EMAIL_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: 'QRurl <noreply@qrurl.app>',
-        to: email,
-        subject: 'Your QRurl Login Link',
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Login to QRurl</h2>
-            <p>Click the link below to log in to your QRurl account:</p>
-            <a href="${magicLink}" style="display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 4px;">
-              Log In
-            </a>
-            <p style="color: #666; font-size: 14px; margin-top: 20px;">
-              This link expires in 15 minutes. If you didn't request this, please ignore this email.
-            </p>
-          </div>
-        `
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to send email');
-    }
+  // Postmark API integration
+  const response = await fetch('https://api.postmarkapp.com/email', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'X-Postmark-Server-Token': env.EMAIL_API_KEY || env.POSTMARK_SERVER_TOKEN
+    },
+    body: JSON.stringify({
+      From: env.EMAIL_FROM || 'noreply@qrurl.us',
+      To: email,
+      Subject: 'Your QRurl Login Link',
+      HtmlBody: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Login to QRurl</h2>
+          <p>Click the link below to log in to your QRurl account:</p>
+          <a href="${magicLink}" style="display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 4px;">
+            Log In
+          </a>
+          <p style="color: #666; font-size: 14px; margin-top: 20px;">
+            This link expires in 15 minutes. If you didn't request this, please ignore this email.
+          </p>
+        </div>
+      `,
+      TextBody: `Login to QRurl\n\nClick the link below to log in to your QRurl account:\n${magicLink}\n\nThis link expires in 15 minutes. If you didn't request this, please ignore this email.`,
+      MessageStream: 'outbound'
+    })
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Postmark error:', error);
+    throw new Error('Failed to send email');
   }
+  
+  const result = await response.json();
+  console.log('Email sent successfully:', result.MessageID);
 }

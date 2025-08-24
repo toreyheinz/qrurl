@@ -25,6 +25,7 @@ preview_id = "981af79732c84684b54fbbe10aa81f6e"
 [vars]
 JWT_SECRET = ""
 EMAIL_API_KEY = ""
+EMAIL_FROM = "noreply@qrurl.us"
 FRONTEND_URL = "http://localhost:3000"
 BACKEND_URL = "http://localhost:8787"
 

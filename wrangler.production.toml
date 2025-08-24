@@ -27,6 +27,7 @@ id = "1cacb0f1b44b4324b62c1bc010ff15f5"
 [vars]
 FRONTEND_URL = "https://qrurl.us"
 BACKEND_URL = "https://qrurl.us"
+EMAIL_FROM = "noreply@qrurl.us"
 
 # Production settings
 [env.production]
