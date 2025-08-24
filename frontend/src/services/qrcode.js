@@ -25,6 +25,8 @@ export async function generateQRCode(text, options = {}) {
 }
 
 export async function generateQRCodeWithLogo(text, logoUrl, options = {}) {
+  console.log('Generating QR code with logo:', logoUrl)
+  
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
   
@@ -46,31 +48,48 @@ export async function generateQRCodeWithLogo(text, logoUrl, options = {}) {
       ctx.drawImage(qrImage, 0, 0, canvas.width, canvas.height)
 
       if (logoUrl) {
-        // Add logo
-        const logo = new Image()
-        logo.crossOrigin = 'anonymous'
-        logo.src = logoUrl
+        // Fetch logo as blob to avoid CORS issues
+        fetch(logoUrl)
+          .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch logo')
+            return response.blob()
+          })
+          .then(blob => {
+            const logo = new Image()
+            const objectUrl = URL.createObjectURL(blob)
+            
+            logo.onload = () => {
+              // Calculate logo size (max 25% of QR code for better scanning)
+              const logoSize = Math.floor(canvas.width * 0.25)
+              const logoX = (canvas.width - logoSize) / 2
+              const logoY = (canvas.height - logoSize) / 2
 
-        logo.onload = () => {
-          // Calculate logo size (max 30% of QR code)
-          const logoSize = Math.floor(canvas.width * 0.3)
-          const logoX = (canvas.width - logoSize) / 2
-          const logoY = (canvas.height - logoSize) / 2
+              // Draw white background with rounded corners
+              ctx.fillStyle = 'white'
+              const padding = 8
+              ctx.fillRect(logoX - padding, logoY - padding, logoSize + padding * 2, logoSize + padding * 2)
 
-          // Draw white background for logo
-          ctx.fillStyle = 'white'
-          ctx.fillRect(logoX - 10, logoY - 10, logoSize + 20, logoSize + 20)
+              // Draw logo
+              ctx.drawImage(logo, logoX, logoY, logoSize, logoSize)
+              
+              // Clean up
+              URL.revokeObjectURL(objectUrl)
+              
+              resolve(canvas.toDataURL())
+            }
 
-          // Draw logo
-          ctx.drawImage(logo, logoX, logoY, logoSize, logoSize)
-
-          resolve(canvas.toDataURL())
-        }
-
-        logo.onerror = () => {
-          // If logo fails to load, return QR without logo
-          resolve(qrDataUrl)
-        }
+            logo.onerror = () => {
+              console.error('Failed to load logo image')
+              URL.revokeObjectURL(objectUrl)
+              resolve(qrDataUrl)
+            }
+            
+            logo.src = objectUrl
+          })
+          .catch(error => {
+            console.error('Failed to fetch logo:', error)
+            resolve(qrDataUrl)
+          })
       } else {
         resolve(qrDataUrl)
       }

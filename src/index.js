@@ -2,6 +2,7 @@ import { Router } from './router';
 import { handleRedirect } from './routes/redirect';
 import { authRoutes } from './routes/auth';
 import { apiRoutes } from './routes/api';
+import { logoRoutes } from './routes/logo';
 import { applyMiddleware } from './middleware';
 import { handleError } from './utils/errors';
 import { addCorsHeaders } from './middleware/cors';
@@ -37,6 +38,9 @@ export default {
 
       // API routes
       router.all('/api/auth/*', authRoutes);
+      router.all('/api/logo/*', (request, env, ctx) => 
+        applyMiddleware(request, env, ctx, logoRoutes)
+      );
       router.all('/api/*', (request, env, ctx) => 
         applyMiddleware(request, env, ctx, apiRoutes)
       );

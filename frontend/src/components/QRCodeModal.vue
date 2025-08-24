@@ -73,7 +73,9 @@ const shortUrl = computed(() => {
 
 onMounted(async () => {
   try {
-    qrCodeUrl.value = await generateQRCodeWithLogo(shortUrl.value, props.entry.logo_url)
+    // Get full logo URL if logo exists
+    const logoUrl = props.entry.logo_url ? getFullLogoUrl(props.entry.logo_url) : null
+    qrCodeUrl.value = await generateQRCodeWithLogo(shortUrl.value, logoUrl)
   } catch (error) {
     console.error('Failed to generate QR code:', error)
     // Try without logo as fallback
@@ -87,6 +89,14 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function getFullLogoUrl(logoUrl) {
+  // If it's a relative URL starting with /api/logo, prepend the backend URL
+  if (logoUrl?.startsWith('/api/logo')) {
+    return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8787'}${logoUrl}`
+  }
+  return logoUrl
+}
 
 function downloadQR() {
   const link = document.createElement('a')

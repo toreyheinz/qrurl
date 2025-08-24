@@ -70,6 +70,22 @@
             />
           </div>
           
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Logo for QR Code (optional)
+            </label>
+            <input
+              type="file"
+              ref="logoFileInput"
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              @change="handleLogoSelect"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              PNG, JPG, SVG, or WebP. Max 5MB. Will be embedded in QR code center.
+            </p>
+          </div>
+          
           <div class="flex justify-end">
             <button
               type="submit"
@@ -143,6 +159,13 @@
                   <ChartBarIcon class="h-5 w-5" />
                 </router-link>
                 <button
+                  @click="editEntry(entry)"
+                  class="p-2 text-gray-400 hover:text-gray-600 transition"
+                  title="Edit"
+                >
+                  <EditIcon class="h-5 w-5" />
+                </button>
+                <button
                   @click="deleteEntry(entry.id)"
                   class="p-2 text-gray-400 hover:text-red-600 transition"
                   title="Delete"
@@ -162,6 +185,14 @@
       :entry="selectedEntry"
       @close="selectedEntry = null"
     />
+    
+    <!-- Edit Entry Modal -->
+    <EditEntryModal
+      v-if="editingEntry"
+      :entry="editingEntry"
+      @close="editingEntry = null"
+      @update="handleEntryUpdate"
+    />
   </div>
 </template>
 
@@ -175,11 +206,13 @@ import {
   Copy as CopyIcon,
   QrCode as QrCodeIcon,
   BarChart3 as ChartBarIcon,
-  Trash2 as TrashIcon
+  Trash2 as TrashIcon,
+  Edit as EditIcon
 } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth'
 import { useEntriesStore } from '../stores/entries'
 import QRCodeModal from '../components/QRCodeModal.vue'
+import EditEntryModal from '../components/EditEntryModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -188,6 +221,9 @@ const entriesStore = useEntriesStore()
 const loading = ref(true)
 const creating = ref(false)
 const selectedEntry = ref(null)
+const editingEntry = ref(null)
+const logoFileInput = ref(null)
+const selectedLogo = ref(null)
 
 const newEntry = ref({
   name: '',
@@ -206,12 +242,79 @@ onMounted(async () => {
 async function handleCreate() {
   creating.value = true
   try {
-    await entriesStore.createEntry(newEntry.value)
+    // First create the entry
+    const entry = await entriesStore.createEntry(newEntry.value)
+    
+    // Then upload logo if selected
+    if (selectedLogo.value && entry) {
+      await uploadLogo(entry.id)
+    }
+    
+    // Reset form
     newEntry.value = { name: '', url: '', customSlug: '' }
+    selectedLogo.value = null
+    if (logoFileInput.value) {
+      logoFileInput.value.value = ''
+    }
   } catch (error) {
     alert(error.response?.data?.error || 'Failed to create link')
   } finally {
     creating.value = false
+  }
+}
+
+function handleLogoSelect(event) {
+  const file = event.target.files[0]
+  if (file) {
+    // Validate file
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      alert('File too large. Maximum size: 5MB')
+      event.target.value = ''
+      return
+    }
+    
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      alert('Invalid file type. Allowed: PNG, JPG, SVG, WebP')
+      event.target.value = ''
+      return
+    }
+    
+    selectedLogo.value = file
+  }
+}
+
+async function uploadLogo(entryId) {
+  if (!selectedLogo.value) return
+  
+  const formData = new FormData()
+  formData.append('logo', selectedLogo.value)
+  formData.append('entryId', entryId)
+  
+  try {
+    const response = await fetch('/api/logo/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: formData
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload logo')
+    }
+    
+    const data = await response.json()
+    
+    // Update the entry in the store with the logo URL
+    const entryIndex = entriesStore.entries.findIndex(e => e.id === entryId)
+    if (entryIndex !== -1) {
+      entriesStore.entries[entryIndex].logo_url = data.logoUrl
+    }
+  } catch (error) {
+    console.error('Logo upload error:', error)
+    // Don't throw - logo upload failure shouldn't break the flow
   }
 }
 
@@ -242,6 +345,23 @@ function copyToClipboard(text) {
 
 function showQRCode(entry) {
   selectedEntry.value = entry
+}
+
+function editEntry(entry) {
+  editingEntry.value = entry
+}
+
+function handleEntryUpdate(updatedEntry) {
+  // Update the entry in the store
+  const index = entriesStore.entries.findIndex(e => e.id === updatedEntry.id)
+  if (index !== -1) {
+    entriesStore.entries[index] = updatedEntry
+  }
+  
+  // Update selected entry if it's the same one
+  if (selectedEntry.value?.id === updatedEntry.id) {
+    selectedEntry.value = updatedEntry
+  }
 }
 
 function formatDate(dateString) {

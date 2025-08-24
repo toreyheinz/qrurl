@@ -5,6 +5,11 @@ export async function verifyAuth(request, env) {
   const url = new URL(request.url);
   const publicPaths = ['/health', '/api/health', '/api/auth/request', '/api/auth/verify'];
   
+  // Skip auth for logo serving (public endpoint)
+  if (url.pathname.startsWith('/api/logo/get/')) {
+    return null;
+  }
+  
   // Skip auth for non-API paths (like redirects) or public API paths
   if (!url.pathname.startsWith('/api') || publicPaths.includes(url.pathname)) {
     return null;
