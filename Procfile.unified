@@ -1,0 +1,8 @@
+# Unified development - preparing for single Workers service deployment
+# Run: foreman start -f Procfile.unified
+
+# Backend with unified config (will serve both API + static files in production)
+backend: wrangler dev --config wrangler.unified.dev.toml
+
+# Frontend dev server (for hot reload during development)
+frontend: cd frontend && npm run dev

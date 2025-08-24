@@ -1,0 +1,42 @@
+name = "qrurl-unified"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "b253e6fbfd2f7757cadd0386de5bde3f"
+
+# Custom domain - single domain for everything
+route = { pattern = "qrurl.us/*", custom_domain = true }
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "qrurl-db"
+database_id = "17eb6fdb-19da-4ed7-931c-a4cdef281f8c"
+
+# R2 Storage for logos
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "qrurl-storage"
+
+# R2 Storage for frontend assets
+[[r2_buckets]]
+binding = "FRONTEND_ASSETS"
+bucket_name = "qrurl-frontend-assets"
+
+# KV Namespace for caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "1cacb0f1b44b4324b62c1bc010ff15f5"
+
+# Environment Variables
+[vars]
+# No FRONTEND_URL needed since everything is on same domain
+BACKEND_URL = "https://qrurl.us"
+EMAIL_FROM = "noreply@qrurl.us"
+
+# Rate limiting
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1"
+simple = { limit = 60, period = 60 }

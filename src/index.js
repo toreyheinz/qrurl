@@ -6,6 +6,7 @@ import { logoRoutes } from './routes/logo';
 import { applyMiddleware } from './middleware';
 import { handleError } from './utils/errors';
 import { addCorsHeaders } from './middleware/cors';
+import { serveStaticAsset } from './lib/static';
 
 export default {
   async fetch(request, env, ctx) {
@@ -45,11 +46,27 @@ export default {
         applyMiddleware(request, env, ctx, apiRoutes)
       );
 
-      // Redirect handler (must be last)
-      router.get('/:slug', handleRedirect);
-
-      // Default route
-      router.all('*', () => {
+      // Try to serve static assets first (for frontend)
+      router.all('*', async (request, env, ctx) => {
+        const url = new URL(request.url);
+        
+        // Skip API routes and health check
+        if (url.pathname.startsWith('/api') || url.pathname === '/health') {
+          return null; // Let it fall through to 404
+        }
+        
+        // Try serving static asset
+        const staticResponse = await serveStaticAsset(request, env, ctx);
+        if (staticResponse) {
+          return staticResponse;
+        }
+        
+        // Try URL redirect (for short links)
+        if (url.pathname.length > 1 && !url.pathname.includes('.')) {
+          return handleRedirect(request, env, ctx);
+        }
+        
+        // Default 404 for everything else
         return new Response(JSON.stringify({ 
           error: 'Not Found',
           message: 'The requested resource was not found'

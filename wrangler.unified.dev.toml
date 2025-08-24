@@ -1,0 +1,46 @@
+name = "qrurl-unified"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "b253e6fbfd2f7757cadd0386de5bde3f"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "qrurl-db"
+database_id = "17eb6fdb-19da-4ed7-931c-a4cdef281f8c"
+
+# R2 Storage for logos
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "qrurl-storage"
+
+# R2 Storage for frontend assets (in dev, we use the frontend dev server)
+[[r2_buckets]]
+binding = "FRONTEND_ASSETS"
+bucket_name = "qrurl-frontend-assets"
+
+# KV Namespace for caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "1cacb0f1b44b4324b62c1bc010ff15f5"
+preview_id = "981af79732c84684b54fbbe10aa81f6e"
+
+# Environment Variables for local development
+[vars]
+# In dev, frontend is served by Vite dev server
+FRONTEND_URL = "http://localhost:3000"
+BACKEND_URL = "http://localhost:8787"
+EMAIL_FROM = "noreply@qrurl.us"
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Rate limiting
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1"
+simple = { limit = 10, period = 60 }
