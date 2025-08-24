@@ -4,10 +4,24 @@ import { authRoutes } from './routes/auth';
 import { apiRoutes } from './routes/api';
 import { applyMiddleware } from './middleware';
 import { handleError } from './utils/errors';
+import { addCorsHeaders } from './middleware/cors';
 
 export default {
   async fetch(request, env, ctx) {
     try {
+      // Handle OPTIONS preflight requests
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            'Access-Control-Allow-Origin': env.FRONTEND_URL || '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Max-Age': '86400',
+          }
+        });
+      }
+
       const router = new Router();
       
       // Health check
@@ -41,9 +55,13 @@ export default {
         });
       });
 
-      return await router.handle(request, env, ctx);
+      const response = await router.handle(request, env, ctx);
+      
+      // Add CORS headers to all responses
+      return addCorsHeaders(response, env);
     } catch (error) {
-      return handleError(error);
+      const errorResponse = handleError(error);
+      return addCorsHeaders(errorResponse, env);
     }
   }
 };
